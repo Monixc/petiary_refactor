@@ -38,7 +38,7 @@ async function uploadDir(s3Path: string, bucketName: string): Promise<void> {
       const fileStream = fs.createReadStream(filePath);
       const uploadParams = {
         Bucket: bucketName,
-        Key: filePath.replace("out/", ""),
+        Key: filePath.split(path.sep).slice(1).join("/"),
         Body: fileStream,
         ContentType: getContentType(filePath),
       };
