@@ -1,9 +1,21 @@
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const {
+  CloudFrontClient,
+  CreateInvalidationCommand,
+} = require("@aws-sdk/client-cloudfront");
 const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
 
 const s3Client = new S3Client({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID as string,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY as string,
+  },
+});
+
+const cloudFrontClient = new CloudFrontClient({
   region: process.env.AWS_REGION,
   credentials: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID as string,
@@ -57,6 +69,33 @@ function getContentType(filePath: string): string {
   return contentTypes[ext] || "application/octet-stream";
 }
 
+async function invalidateCache(): Promise<void> {
+  if (!process.env.CLOUDFRONT_DISTRIBUTION_ID) {
+    throw new Error(
+      "CLOUDFRONT_DISTRIBUTION_ID environment variable is not defined"
+    );
+  }
+
+  const params = {
+    DistributionId: process.env.CLOUDFRONT_DISTRIBUTION_ID,
+    InvalidationBatch: {
+      CallerReference: String(new Date().getTime()),
+      Paths: {
+        Quantity: 1,
+        Items: ["/*"],
+      },
+    },
+  };
+
+  try {
+    await cloudFrontClient.send(new CreateInvalidationCommand(params));
+    console.log("CloudFront cache invalidation created");
+  } catch (err) {
+    console.error("CloudFront cache invalidation failed:", err);
+    throw err;
+  }
+}
+
 async function deploy(): Promise<void> {
   if (!process.env.S3_BUCKET) {
     throw new Error("S3_BUCKET environment variable is not defined");
@@ -64,6 +103,9 @@ async function deploy(): Promise<void> {
 
   try {
     await uploadDir("out", process.env.S3_BUCKET);
+    console.log("S3 upload completed successfully");
+
+    await invalidateCache();
     console.log("Deployment completed successfully");
   } catch (err) {
     console.error("Deployment failed:", err);
