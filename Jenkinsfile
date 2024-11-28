@@ -31,14 +31,19 @@ pipeline {
     }
     
     post {
-        always {
-            discordSend(
-                description: "Jenkins Build ${currentBuild.currentResult}",
-                link: env.BUILD_URL,
-                result: currentBuild.currentResult,
-                title: env.JOB_NAME,
-                webhookURL: DISCORD_WEBHOOK
-            )
+        success {
+            discordSend description: "빌드 성공: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                        link: env.BUILD_URL,
+                        result: currentBuild.currentResult,
+                        title: "Jenkins 빌드 알림",
+                        webhookURL: env.DISCORD_WEBHOOK
+        }
+        failure {
+            discordSend description: "빌드 실패: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                        link: env.BUILD_URL,
+                        result: currentBuild.currentResult,
+                        title: "Jenkins 빌드 알림",
+                        webhookURL: env.DISCORD_WEBHOOK
         }
     }
 }
