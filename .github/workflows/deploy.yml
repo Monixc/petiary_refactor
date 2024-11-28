@@ -1,4 +1,4 @@
-name: Deploy to Production
+name: CI/CD Pipeline
 
 on:
   push:
@@ -9,48 +9,40 @@ on:
       - main
 
 jobs:
-  deploy:
+  test:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: "20"
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Build project
-        run: npm run build
-        env:
-          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+      - name: Run tests
+        run: npm run lint
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-
-      - name: Deploy to S3
-        run: |
-          aws s3 sync out s3://${{ secrets.S3_BUCKET }} --delete
-
-      - name: Invalidate CloudFront
-        run: |
-          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
-
-      - name: Notify Discord
+      - name: Notify Discord (Test)
         uses: sarisia/actions-status-discord@v1
         if: always()
         with:
           webhook: ${{ secrets.DISCORD_WEBHOOK }}
-          title: "배포 상태"
+          title: "테스트 상태"
           description: |
             브랜치: ${{ github.ref }}
             커밋: ${{ github.sha }}
           color: ${{ job.status }}
+
+  trigger-jenkins:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Jenkins Job
+        uses: appleboy/jenkins-action@master
+        with:
+          url: ${{ secrets.JENKINS_URL }}
+          user: ${{ secrets.JENKINS_USER }}
+          token: ${{ secrets.JENKINS_TOKEN }}
+          job: "petiary_deploy"
