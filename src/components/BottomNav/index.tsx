@@ -7,7 +7,7 @@ import { Home, Calendar, BookOpen, User } from "lucide-react";
 export default function BottomNavigation() {
   const pathname = usePathname();
 
-  if (pathname.includes("/diary/write")) {
+  if (pathname.includes("/login") || pathname.includes("/diary/write")) {
     return null;
   }
 
