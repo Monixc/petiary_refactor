@@ -8,6 +8,8 @@ export function useDiary(dateParam: string | null) {
   const [isLoading, setIsLoading] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
 
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
   const updateDiaryEntry = (updates: Partial<DiaryEntry>) => {
     if (!dateParam) return;
 
@@ -50,7 +52,7 @@ export function useDiary(dateParam: string | null) {
 
     setIsLoading(true);
     try {
-      const response = await fetch("/api/generate-diary", {
+      const response = await fetch(`${API_URL}/diary/generate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

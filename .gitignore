@@ -20,6 +20,7 @@
 # production
 /build
 
+/openai-layer
 # misc
 .DS_Store
 *.pem
