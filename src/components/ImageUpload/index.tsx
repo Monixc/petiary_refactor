@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
+import { uploadToS3 } from "@/lib/s3";
 
 interface ImageUploadProps {
   onUploadComplete?: (url: string) => void;
@@ -16,20 +17,8 @@ export function ImageUpload({ onUploadComplete }: ImageUploadProps) {
 
     try {
       setUploading(true);
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error("Upload failed");
-      }
-
-      const data = await response.json();
-      onUploadComplete?.(data.url);
+      const imageUrl = await uploadToS3(file);
+      onUploadComplete?.(imageUrl);
     } catch (error) {
       console.error("Upload error:", error);
       alert("업로드에 실패했습니다.");
