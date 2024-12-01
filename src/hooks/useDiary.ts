@@ -1,5 +1,6 @@
 import { DiaryEntry } from "@/types/diary.types";
 import { useState, useEffect } from "react";
+import { createDiary, getDiaryByDate } from "@/lib/db/diary";
 
 export function useDiary(dateParam: string | null) {
   const [content, setContent] = useState("");
@@ -7,45 +8,21 @@ export function useDiary(dateParam: string | null) {
   const [generatedDiary, setGeneratedDiary] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-  const updateDiaryEntry = (updates: Partial<DiaryEntry>) => {
-    if (!dateParam) return;
-
-    const entries = JSON.parse(localStorage.getItem("diaryEntries") || "[]");
-    const existingEntryIndex = entries.findIndex(
-      (entry: DiaryEntry) => entry.date === dateParam
-    );
-
-    if (existingEntryIndex >= 0) {
-      entries[existingEntryIndex] = {
-        ...entries[existingEntryIndex],
-        ...updates,
-      };
-    } else {
-      entries.push({
-        date: dateParam,
-        ...updates,
-      });
-    }
-
-    localStorage.setItem("diaryEntries", JSON.stringify(entries));
-  };
-
   const handleImageUpload = (url: string) => {
     setImageUrl(url);
-    updateDiaryEntry({ imageUrl: url });
   };
 
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newContent = e.target.value;
-    setContent(newContent);
-    updateDiaryEntry({ content: newContent });
+    if (!e || !e.target) return;
+    setContent(e.target.value);
   };
 
   const generateDiary = async () => {
-    if (!imageUrl || !content) {
+    if (!imageUrl || !content || !userId || !dateParam) {
       alert("이미지와 내용을 모두 입력해주세요.");
       return;
     }
@@ -69,7 +46,11 @@ export function useDiary(dateParam: string | null) {
       setGeneratedDiary(data.diary);
       setGeneratedImage(data.generatedImage);
 
-      updateDiaryEntry({
+      await createDiary({
+        userId,
+        date: dateParam,
+        content,
+        imageUrl,
         generatedDiary: data.diary,
         generatedImage: data.generatedImage,
       });
@@ -84,18 +65,32 @@ export function useDiary(dateParam: string | null) {
   useEffect(() => {
     if (!dateParam) return;
 
-    const entries = JSON.parse(localStorage.getItem("diaryEntries") || "[]");
-    const existingEntry = entries.find(
-      (entry: DiaryEntry) => entry.date === dateParam
-    );
+    const fetchDiary = async () => {
+      if (!userId || !dateParam) return;
 
-    if (existingEntry) {
-      setImageUrl(existingEntry.imageUrl || null);
-      setContent(existingEntry.content || "");
-      setGeneratedDiary(existingEntry.generatedDiary || null);
-      setGeneratedImage(existingEntry.generatedImage || null);
+      try {
+        const diary = await getDiaryByDate(userId, dateParam);
+        if (diary) {
+          setImageUrl(diary.imageUrl || null);
+          setContent(diary.content || "");
+          setGeneratedDiary(diary.generatedDiary || null);
+          setGeneratedImage(diary.generatedImage || null);
+        }
+      } catch (error) {
+        console.error("Failed to fetch diary:", error);
+      }
+    };
+
+    fetchDiary();
+  }, [dateParam, userId]);
+
+  useEffect(() => {
+    const userInfo = localStorage.getItem("userInfo");
+    if (userInfo) {
+      const { sub } = JSON.parse(userInfo);
+      setUserId(sub);
     }
-  }, [dateParam]);
+  }, []);
 
   return {
     content,
