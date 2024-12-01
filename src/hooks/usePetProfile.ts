@@ -1,22 +1,24 @@
 import { useEffect, useState } from "react";
 import { createPet, getPets } from "@/lib/db/pet";
-import { useAuth } from "@/contexts/AuthContext";
 import { Pet } from "@/types/pet.types";
 
 export function usePetProfile() {
   const [pets, setPets] = useState<Pet[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { user } = useAuth();
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user?.sub) {
-      loadPets();
+    const userInfo = localStorage.getItem("userInfo");
+    if (userInfo) {
+      const { sub } = JSON.parse(userInfo);
+      setUserId(sub);
+      loadPets(sub);
     }
-  }, [user]);
+  }, []);
 
-  const loadPets = async () => {
+  const loadPets = async (id: string) => {
     try {
-      const response = await getPets(user.sub);
+      const response = await getPets(id);
       const mappedPets = (response.Items || []).map((item) => ({
         id: item.petId,
         name: item.name,
@@ -32,10 +34,13 @@ export function usePetProfile() {
     }
   };
 
-  const handleAddPet = async (newPet: any) => {
+  const handleAddPet = async (pet: any) => {
     try {
-      await createPet(user.sub, newPet);
-      await loadPets();
+      if (!userId) {
+        throw new Error("User not authenticated");
+      }
+      await createPet(userId, pet);
+      await loadPets(userId);
       setIsModalOpen(false);
     } catch (error) {
       console.error("Failed to add pet:", error);

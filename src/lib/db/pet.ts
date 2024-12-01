@@ -6,7 +6,7 @@ export async function createPet(userId: string, pet: any) {
   const command = new PutCommand({
     TableName: "petiary-pets",
     Item: {
-      userId,
+      userId: userId,
       petId: uuidv4(),
       name: pet.name,
       age: pet.age,
@@ -14,8 +14,8 @@ export async function createPet(userId: string, pet: any) {
       imageUrl: pet.imageUrl,
       gender: pet.gender,
       personality: pet.personality,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     },
   });
 

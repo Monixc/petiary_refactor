@@ -4,15 +4,6 @@ const cognitoClient = new CognitoIdentityProvider({
   region: process.env.NEXT_PUBLIC_AWS_REGION,
 });
 
-const COGNITO_DOMAIN = process.env.NEXT_PUBLIC_COGNITO_DOMAIN!;
-const AWS_REGION = process.env.NEXT_PUBLIC_AWS_REGION!;
-const CLIENT_ID = process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID!;
-const CLIENT_SECRET = process.env.NEXT_PUBLIC_COGNITO_CLIENT_SECRET!;
-const REDIRECT_URI =
-  process.env.NODE_ENV === "development"
-    ? "http://localhost:3000/auth/callback"
-    : "https://petiary.link/auth/callback";
-
 export const signInWithGoogle = async () => {
   try {
     const clientId = process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID;
@@ -81,7 +72,6 @@ export const handleCallback = async (code: string) => {
     if (tokens.access_token) {
       localStorage.setItem("accessToken", tokens.access_token);
 
-      // 사용자 정보 가져오기
       const userInfoEndpoint = `https://${domain}/oauth2/userInfo`;
       const userInfoResponse = await fetch(userInfoEndpoint, {
         headers: {
@@ -91,7 +81,14 @@ export const handleCallback = async (code: string) => {
 
       const userInfo = await userInfoResponse.json();
       console.log("User info:", userInfo);
-      localStorage.setItem("userInfo", JSON.stringify(userInfo));
+
+      localStorage.setItem(
+        "userInfo",
+        JSON.stringify({
+          ...userInfo,
+          userId: userInfo.sub,
+        })
+      );
     }
 
     return tokens;
