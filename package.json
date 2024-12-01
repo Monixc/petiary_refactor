@@ -13,6 +13,7 @@
   "dependencies": {
     "@aws-sdk/client-cloudfront": "^3.699.0",
     "@aws-sdk/client-cognito-identity": "^3.699.0",
+    "@aws-sdk/client-cognito-identity-provider": "^3.699.0",
     "@aws-sdk/s3-request-presigner": "^3.701.0",
     "@radix-ui/react-dialog": "^1.1.2",
     "@radix-ui/react-label": "^2.1.0",
