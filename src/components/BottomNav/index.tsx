@@ -26,7 +26,7 @@ export default function BottomNavigation() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t flex items-center justify-around py-2 px-4 z-50">
+    <nav className="fixed rounded-t-2xl bottom-0 h-16 left-0 right-0 max-w-md mx-auto bg-white border-t flex items-center justify-around py-2 px-4 z-50">
       {navItems.map(({ href, label, icon: Icon, disabled }) => (
         <div
           key={href}
