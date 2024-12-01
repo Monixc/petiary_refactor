@@ -1,9 +1,9 @@
 "use client";
 
-import { AddPetModal } from "@/components/AddPetModal";
-import { USERNAME } from "@/constants/petProfile";
-import { usePetProfile } from "@/hooks/usePetProfile";
+import { AddPetModal } from "@/components/modal/AddPetModal";
 import { PetList } from "./_components/PetList";
+import { usePetProfile } from "@/hooks/usePetProfile";
+import { USERNAME } from "@/constants/petProfile";
 
 export default function ProfilePage() {
   const { pets, isModalOpen, handleAddPet, openModal, closeModal } =
