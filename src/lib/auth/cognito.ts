@@ -41,8 +41,6 @@ export const handleCallback = async (code: string) => {
         : "https://petiary.link/auth/callback";
 
     const tokenEndpoint = `https://${domain}/oauth2/token`;
-
-    // Basic 인증을 위한 base64 인코딩
     const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString(
       "base64"
     );
@@ -73,6 +71,24 @@ export const handleCallback = async (code: string) => {
 
     if (tokens.access_token) {
       localStorage.setItem("accessToken", tokens.access_token);
+
+      const userInfoEndpoint = `https://${domain}/oauth2/userInfo`;
+      const userInfoResponse = await fetch(userInfoEndpoint, {
+        headers: {
+          Authorization: `Bearer ${tokens.access_token}`,
+        },
+      });
+
+      const userInfo = await userInfoResponse.json();
+      console.log("User info:", userInfo);
+
+      localStorage.setItem(
+        "userInfo",
+        JSON.stringify({
+          ...userInfo,
+          userId: userInfo.sub,
+        })
+      );
     }
 
     return tokens;

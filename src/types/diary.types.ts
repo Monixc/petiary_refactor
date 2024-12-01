@@ -1,4 +1,5 @@
 export interface DiaryEntry {
+  userId: string;
   date: string;
   imageUrl?: string;
   content?: string;

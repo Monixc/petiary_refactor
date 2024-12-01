@@ -5,14 +5,9 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-
-interface DiaryEntry {
-  date: string;
-  imageUrl?: string;
-  content?: string;
-  generatedDiary?: string;
-  generatedImage?: string;
-}
+import { useState, useEffect } from "react";
+import { getDiaries } from "@/lib/db/diary";
+import { DiaryEntry } from "@/types/diary.types";
 
 function formatYYYYMMDD(date: Date) {
   const year = date.getFullYear();
@@ -35,9 +30,30 @@ function formatDay(date: Date) {
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
 export function DiaryCalendar() {
-  const [diaryEntries, setDiaryEntries] = React.useState<DiaryEntry[]>([]);
-  const [currentMonth, setCurrentMonth] = React.useState(new Date());
+  const [diaryEntries, setDiaryEntries] = useState<DiaryEntry[]>([]);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [userId, setUserId] = useState<string | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    const userInfo = localStorage.getItem("userInfo");
+    if (userInfo) {
+      const { sub } = JSON.parse(userInfo);
+      setUserId(sub);
+      fetchDiaries(sub);
+    }
+  }, [currentMonth]);
+
+  const fetchDiaries = async (userId: string) => {
+    try {
+      const response = await getDiaries(userId);
+      if (response.Items) {
+        setDiaryEntries(response.Items as DiaryEntry[]);
+      }
+    } catch (error) {
+      console.error("Failed to fetch diaries:", error);
+    }
+  };
 
   // 월의 첫날과 마지막날 계산
   const firstDay = new Date(
@@ -67,7 +83,7 @@ export function DiaryCalendar() {
           entry.date === date ? { ...entry, imageUrl } : entry
         );
       }
-      return [...prev, { date, imageUrl }];
+      return [...prev, { userId: userId!, date, imageUrl }];
     });
   };
 
@@ -75,13 +91,6 @@ export function DiaryCalendar() {
   const handleDateClick = (formattedDate: string) => {
     router.push(`/diary/write?date=${formattedDate}`);
   };
-
-  React.useEffect(() => {
-    const savedEntries = localStorage.getItem("diaryEntries");
-    if (savedEntries) {
-      setDiaryEntries(JSON.parse(savedEntries));
-    }
-  }, []);
 
   return (
     <div className="w-full px-8 py-4">
