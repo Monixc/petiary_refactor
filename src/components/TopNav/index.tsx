@@ -16,7 +16,7 @@ export default function TopBar() {
   return (
     <header className="fixed top-0 left-0 right-0 max-w-md mx-auto h-14 bg-white border-b flex items-center justify-between px-4 z-50">
       <div className="flex-1">
-        {!isWritePage && <h1 className="text-lg font-medium">Petiary</h1>}
+        {!isWritePage && <h1 className="text-lg logo">Petiary</h1>}
       </div>
       <div>
         {isWritePage && (
