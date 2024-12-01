@@ -5,7 +5,7 @@ import Image from "next/image";
 interface DiaryContentProps {
   content: string;
   imageUrl: string | null;
-  onContentChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  onContentChange: (value: string) => void;
   onImageUpload: (url: string) => void;
 }
 
@@ -21,7 +21,7 @@ export function DiaryContent({
         placeholder="오늘 하루는 어땠나요?"
         className="min-h-[150px] resize-none p-4 text-base w-full"
         value={content}
-        onChange={onContentChange}
+        onChange={(e) => onContentChange(e.target.value)}
       />
       <div className="border-2 border-dashed border-gray-200 rounded-lg p-4">
         {imageUrl ? (
