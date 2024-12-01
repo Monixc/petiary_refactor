@@ -4,6 +4,15 @@ const cognitoClient = new CognitoIdentityProvider({
   region: process.env.NEXT_PUBLIC_AWS_REGION,
 });
 
+const COGNITO_DOMAIN = process.env.NEXT_PUBLIC_COGNITO_DOMAIN!;
+const AWS_REGION = process.env.NEXT_PUBLIC_AWS_REGION!;
+const CLIENT_ID = process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID!;
+const CLIENT_SECRET = process.env.NEXT_PUBLIC_COGNITO_CLIENT_SECRET!;
+const REDIRECT_URI =
+  process.env.NODE_ENV === "development"
+    ? "http://localhost:3000/auth/callback"
+    : "https://petiary.link/auth/callback";
+
 export const signInWithGoogle = async () => {
   try {
     const clientId = process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID;
@@ -41,8 +50,6 @@ export const handleCallback = async (code: string) => {
         : "https://petiary.link/auth/callback";
 
     const tokenEndpoint = `https://${domain}/oauth2/token`;
-
-    // Basic 인증을 위한 base64 인코딩
     const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString(
       "base64"
     );
@@ -73,6 +80,18 @@ export const handleCallback = async (code: string) => {
 
     if (tokens.access_token) {
       localStorage.setItem("accessToken", tokens.access_token);
+
+      // 사용자 정보 가져오기
+      const userInfoEndpoint = `https://${domain}/oauth2/userInfo`;
+      const userInfoResponse = await fetch(userInfoEndpoint, {
+        headers: {
+          Authorization: `Bearer ${tokens.access_token}`,
+        },
+      });
+
+      const userInfo = await userInfoResponse.json();
+      console.log("User info:", userInfo);
+      localStorage.setItem("userInfo", JSON.stringify(userInfo));
     }
 
     return tokens;
