@@ -10,7 +10,7 @@ export const signInWithGoogle = async () => {
     const redirectUri =
       process.env.NODE_ENV === "development"
         ? "http://localhost:3000/auth/callback"
-        : "https://petiary.link/auth/callback";
+        : "https://d1gop06qpjqrbi.cloudfront.net/auth/callback";
 
     const loginUrl =
       `https://ap-northeast-2vei2svb4o.auth.ap-northeast-2.amazoncognito.com/oauth2/authorize?` +
@@ -38,7 +38,7 @@ export const handleCallback = async (code: string) => {
     const redirectUri =
       process.env.NODE_ENV === "development"
         ? "http://localhost:3000/auth/callback"
-        : "https://petiary.link/auth/callback";
+        : "https://d1gop06qpjqrbi.cloudfront.net/auth/callback";
 
     const tokenEndpoint = `https://${domain}/oauth2/token`;
     const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString(
